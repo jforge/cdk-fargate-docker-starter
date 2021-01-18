@@ -70,7 +70,7 @@ const createTaskDefinition = (
       containerPort: containerProperties.containerPort,
       protocol: ecs.Protocol.TCP,
     });
-  tags.forEach((tag) => taskDefinition.node.applyAspect(new cdk.Tag(tag.name, tag.value)));
+  tags.forEach((tag) => cdk.Aspects.of(taskDefinition).add(new cdk.Tag(tag.name, tag.value)));
   return taskDefinition;
 };
 
@@ -82,7 +82,7 @@ const configureClusterAndServices = (
   containerProperties: ContainerProperties[],
   tags: Tag[]) => {
 
-  const services = containerProperties.map((container) => 
+  const services = containerProperties.map((container) =>
     new ecs.FargateService(stack, `${container.id}FargateService`, {
     cluster,
     taskDefinition: createTaskDefinition(`${container.id}`, stack, container, tags),
@@ -98,7 +98,7 @@ const configureClusterAndServices = (
       port: 443,
       certificateArns: [certificate.certificateArn],
     });
-  
+
   services.forEach((service, i) =>
     service.registerLoadBalancerTargets({
       containerName: `${containerProperties[i].id}Container`,
@@ -145,9 +145,9 @@ export const createStack = (
   const vpcInUse = vpc ? vpc : new ec2.Vpc(stack, `${id}Vpc`, { maxAzs: 2 });
   const cluster = new ecs.Cluster(stack, `${id}Cluster`, { vpc: vpcInUse });
   const { loadBalancer, services } = configureClusterAndServices(id, stack, cluster, certificate, containerProperties, tags);
-  tags.forEach((tag) => vpcInUse.node.applyAspect(new cdk.Tag(tag.name, tag.value)));
-  tags.forEach((tag) => loadBalancer.node.applyAspect(new cdk.Tag(tag.name, tag.value)));
-  tags.forEach((tag) => services.forEach((s) => s.node.applyAspect(new cdk.Tag(tag.name, tag.value))));
+  tags.forEach((tag: Tag) => cdk.Aspects.of(vpcInUse).add(new cdk.Tag(tag.name, tag.value)));
+  tags.forEach((tag: Tag) => cdk.Aspects.of(loadBalancer).add(new cdk.Tag(tag.name, tag.value)));
+  tags.forEach((tag: Tag) => services.forEach((s) => cdk.Aspects.of(s).add(new cdk.Tag(tag.name, tag.value))));
 
   const zone = route53.HostedZone.fromLookup(stack, `${id}Zone`, {
     domainName: domainProperties.domainName

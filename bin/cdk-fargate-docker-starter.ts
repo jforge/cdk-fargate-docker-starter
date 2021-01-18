@@ -8,11 +8,14 @@ import { dockerProperties as dockerPropertiesProd, stackTags as stackTagsProd } 
 // Name for the app and prefix for all created resources
 const appName = 'AppName';
 
-// Define region and acconunt for the stack
+// Define region and account for the stack
+const profile = process.env.AWS_PROFILE || 'default';
+const account = process.env.CDK_DEFAULT_ACCOUNT;
+
 const stackProperties = {
     env: {
         region: 'eu-west-1',
-        account: '872821666058',
+        account: account,
     }
 };
 
